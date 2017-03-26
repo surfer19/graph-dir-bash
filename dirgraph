@@ -1,0 +1,123 @@
+#!/bin/bash
+
+while getopts ":i: :n" opt; do
+  case $opt in
+    i)
+			FILE_ERE="$OPTARG"
+      echo "-i was triggered, Parameter: $OPTARG" >&2
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+		n)
+			NORMALIZATION = $OPTARG
+      echo "-n was triggered" >&2
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+OPTIND=$((OPTIND-1))
+
+shift $OPTIND
+
+DIRECTORY="$1"
+
+# dirgraph
+# dirgraph -i
+# dirgraph -n
+# dirgraph -i -n
+# dirgraph -i -n /dir
+# dirgraph -i /dir
+# dirgraph -n /dir
+# dirgraph /dir
+
+# TODO osetri + file_ere + normalization
+
+if [ -z "$DIRECTORY" ]
+	then
+	DIRECTORY=$(pwd)
+else
+	DIRECTORY="$1"
+fi
+
+
+#ND
+ND=`find $DIRECTORY -type d | wc -l`
+
+echo "Root directory: "$DIRECTORY
+echo "Directories: "$ND
+NF=$(find $DIRECTORY -type f | wc -l )
+echo "All files: "$NF
+echo "File size histogram:"
+
+
+# print all file sizes
+#echo $(find $DIRECTORY -type f -exec ls -l {} \; | awk '{ print $5 }')
+
+printf	"  <100 B  : "
+variable=$(find $DIRECTORY -type f -size -100c)
+for i in $variable ; do printf "#"; done
+printf "\n"
+
+printf	"  <1 KiB  : "
+variable2=$(find $DIRECTORY -type f -size +99c -size -1024c)
+for j in $variable2; do printf "#"; done
+printf "\n"
+
+printf	"  <10 KiB : "
+variable3=$(find $DIRECTORY -type f -size +1023c -size -10240c)
+for k in $variable3; do printf "#"; done
+printf "\n"
+
+printf	"  <100 KiB: "
+variable4=$(find $DIRECTORY -type f -size +10239c -size -102400c)
+for l in $variable4; do printf "#"; done
+printf "\n"
+
+printf	"  <1 MiB  : "
+variable5=$(find $DIRECTORY -type f -size +102399c -size -1048576c)
+for m in $variable5; do printf "#"; done
+printf "\n"
+
+printf	"  <10 MiB : "
+variable6=$(find $DIRECTORY -type f -size +1048575c -size -10485760c)
+for n in $variable6; do printf "#"; done
+printf "\n"
+
+printf	"  <100 MiB: "
+variable7=$(find $DIRECTORY -type f -size +10485759c -size -104857600c)
+for n in $variable7; do printf "#"; done
+printf "\n"
+
+printf	"  <1 GiB  : "
+variable8=$(find $DIRECTORY -type f -size +104857599c -size -134217728c)
+for n in $variable8; do printf "#"; done
+printf "\n"
+
+printf	"  >=1 GiB : "
+variable9=$(find $DIRECTORY -type f -size +134217727c)
+for n in $variable9; do printf "#"; done
+printf "\n"
+
+#FSHIST=`find $DIRECTORY -type f -exec file -b  {} \;
+#parsed=`file -b "$f"` ;
+#
+echo "File type histogram:"
+
+for line in `find $DIRECTORY -type f `; do echo $(file -b $line);
+done  | sort -f | sort -r | cut -c1-40 | sed "s/\(.\{40\}\)/\1.../" | uniq -c | sort -k1,1nr  |
+while read line; do var=$(echo $line | grep -o -E "^[0-9]*"); line=$(echo $line | sed "s/^[0-9]*\s/  /");
+printf "%-46s: " " $line"; printf "%0.s#" $(seq 1 $var); echo; done | sed "s/^ */  /" | sed "s/^[0-9]*\s/ /" | head -n 10
+                     # | cut -c1-40 | sed...
+#| sed "s/.*: //"
+
+# -o print each match
+# -E Interpret pattern as an extended regular expression (i.e. force grep to behave as egrep).
+# ^ matches the null string at the beginning of a line,
+
+exit 0
