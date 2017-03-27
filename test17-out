@@ -7,10 +7,10 @@ File size histogram:
   <10 KiB : ###########
   <100 KiB: #####################
   <1 MiB  : #####
-  <10 MiB :
-  <100 MiB:
-  <1 GiB  :
-  >=1 GiB :
+  <10 MiB : 
+  <100 MiB: 
+  <1 GiB  : 
+  >=1 GiB : 
 File type histogram:
   PNG image data, 640 x 480, 8-bit/color R...: ##########
   ELF 64-bit LSB executable, x86-64, versi...: #########

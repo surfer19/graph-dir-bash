@@ -1,10 +1,18 @@
 #!/bin/bash
 
+NORMALIZATION=""
+norm_cnt=$((0))
 while getopts ":i: :n" opt; do
   case $opt in
     i)
 			FILE_ERE="$OPTARG"
-      echo "-i was triggered, Parameter: $OPTARG" >&2
+      ere_cnt=$((ere_cnt+1))
+      #echo "-i was triggered, Parameter: $OPTARG" >&2
+      if [ "$ere_cnt" -gt 1 ]
+          then
+          echo "option -i more than 1 time" >&2
+          exit 1
+      fi
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -12,7 +20,13 @@ while getopts ":i: :n" opt; do
       ;;
 		n)
 			NORMALIZATION="pressed"
-      echo "-n was triggered" >&2
+      norm_cnt=$((norm_cnt+1))
+      #echo "-n was triggered" >&2
+      if [ "$norm_cnt" -gt 1 ]
+          then
+          echo "option -n more than 1 time" >&2
+          exit 1
+      fi
       ;;
     :)
       echo "Option -$OPTARG requires an argument." >&2
@@ -27,15 +41,6 @@ shift $OPTIND
 
 DIRECTORY="$1"
 
-# dirgraph
-# dirgraph -i
-# dirgraph -n
-# dirgraph -i -n
-# dirgraph -i -n /dir
-# dirgraph -i /dir
-# dirgraph -n /dir
-# dirgraph /dir
-
 # TODO osetri + file_ere + normalization
 
 if [ -z "$DIRECTORY" ]
@@ -45,87 +50,145 @@ else
 	DIRECTORY="$1"
 fi
 
+#Test if path is real
+if [ -d $DIRECTORY ]
+then
+DIRECTORY=$DIRECTORY
+else
+	printf "not valid path %s.\n" "$DIRECTORY" >&2
+    exit 1
+fi
+
+if [ -z "$FILE_ERE" ]
+then
+	if [ -z "$DIRECTORY" ]
+	then
+		# file_ere is empty and dir is empty
+		DIRECTORY=$(pwd)
+		FILE_ERE="$^"
+	else
+		# file_ere is empty and dir is not empty
+		FILE_ERE="$^"
+	fi
+else
+	if [ -z "$DIRECTORY" ]
+	then
+		#file_ere is not empty and dir is empty
+		DIRECTORY=$(pwd)
+	fi
+fi
+
+if [ "$#" -gt 4 ]; then
+    echo "Illegal number of parameters"
+  # fi
+fi
 
 #ND
 ND=`find $DIRECTORY -type d | wc -l`
 
 echo "Root directory: "$DIRECTORY
 echo "Directories: "$ND
-NF=$(find $DIRECTORY -type f | wc -l )
+NF=`find $DIRECTORY -type f |sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g' | wc -l`
 echo "All files: "$NF
 echo "File size histogram:"
 
 
+# 40-max typ filu  +  79max dlzka riadka
+# 47 max pre hestegy?
+
 # print all file sizes
 #echo $(find $DIRECTORY -type f -exec ls -l {} \; | awk '{ print $5 }')
 
-variable6=""
+# number of all columns in row
+columns=$(tput cols)
+# number for hashtags
+n_of_hashtags_sizes=$((columns-11))
 
-printf "  <100 B  :"
-variable=$(find $DIRECTORY -type f -size -100c)
-if test ! -z "$variable"; then printf " "; fi
-for i in $variable ; do printf "#"; done
+
+printf "  <100 B  : "
+variable=$(find $DIRECTORY -type f -size -100c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+
+#if test ! -z "$variable"; then printf " "; fi
+#if [[ $NORMALIZATION == "pressed" ]]
+#then
+  #for i in $variable ; do if [ $helper -eq 1 ]; then average=$(echo "scale=2; $variable/$n_of_hashtags_sizes" | bc); fi; helper=$((helper=0)); printf "%0.s#" $(seq 1 $(echo "scale=2; $variable/$average" | bc)); done
+#else
+  for i in $variable ; do printf "#"; done
+#fi
 printf "\n"
 
-printf "  <1 KiB  :"
-variable2=$(find $DIRECTORY -type f -size +99c -size -1024c)
-if test ! -z "$variable2"; then printf " "; fi
+printf "  <1 KiB  : "
+variable2=$(find $DIRECTORY -type f -size +99c -size -1024c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable2"; then printf " "; fi
 for j in $variable2; do printf "#"; done
 printf "\n"
 
-printf "  <10 KiB :"
-variable3=$(find $DIRECTORY -type f -size +1023c -size -10240c)
-if test ! -z "$variable3"; then printf " "; fi
+printf "  <10 KiB : "
+variable3=$(find $DIRECTORY -type f -size +1023c -size -10240c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable3"; then printf " "; fi
 for k in $variable3; do printf "#"; done
 printf "\n"
 
-printf "  <100 KiB:"
-variable4=$(find $DIRECTORY -type f -size +10239c -size -102400c)
-if test ! -z "$variable4"; then printf " "; fi
+printf "  <100 KiB: "
+variable4=$(find $DIRECTORY -type f  -size +10239c -size -102400c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable4"; then printf " "; fi
 for l in $variable4; do printf "#"; done
 printf "\n"
 
-printf "  <1 MiB  :"
-variable5=$(find $DIRECTORY -type f -size +102399c -size -1048576c)
+printf "  <1 MiB  : "
+variable5=$(find $DIRECTORY -type f  -size +102399c -size -1048576c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
 #printf "$variable5"
-if test ! -z "$variable5"; then printf " "; fi
+#if test ! -z "$variable5"; then printf " "; fi
 for m in $variable5; do printf "#"; done
 printf "\n"
 
-printf "  <10 MiB :"
-variable6=$(find $DIRECTORY -type f -size +1048575c -size -10485760c)
-if test ! -z "$variable6"; then printf " "; fi
+printf "  <10 MiB : "
+variable6=$(find $DIRECTORY -type f  -size +1048575c -size -10485760c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable6"; then printf " "; fi
 for n in $variable6; do printf "#"; done
 printf "\n"
 
-printf "  <100 MiB:"
-variable7=$(find $DIRECTORY -type f -size +10485759c -size -104857600c)
-if test ! -z "$variable7"; then printf " "; fi
+printf "  <100 MiB: "
+variable7=$(find $DIRECTORY -type f -size +10485759c -size -104857600c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable7"; then printf " "; fi
 for n in $variable7; do printf "#"; done
 printf "\n"
 
-printf "  <1 GiB  :"
-variable8=$(find $DIRECTORY -type f -size +104857599c -size -134217728c)
-if test ! -z "$variable8"; then printf " "; fi
+printf "  <1 GiB  : "
+variable8=$(find $DIRECTORY -type f  -size +104857599c -size -134217728c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable8"; then printf " "; fi
 for n in $variable8; do printf "#"; done
 printf "\n"
 
-printf "  >=1 GiB :"
-variable9=$(find $DIRECTORY -type f -size +134217727c)
-if test ! -z "$variable9"; then printf " "; fi
+printf "  >=1 GiB : "
+variable9=$(find $DIRECTORY -type f -size +134217727c | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g')
+#if test ! -z "$variable9"; then printf " "; fi
 for n in $variable9; do printf "#"; done
 printf "\n"
 
+# number of all columns in row
+columns=$(tput cols)
+# number for hashtags
+n_of_hashtags=$((columns-48))
+
+
 #FSHIST=`find $DIRECTORY -type f -exec file -b  {} \;
 #parsed=`file -b "$f"` ;
-#
+
 printf "File type histogram:\n"
 
-if [ ! -z "$NORMALIZATION" ]
+helper=1
+
+if [[ $NORMALIZATION == "pressed" ]]
 then
-  echo "normalizacia"
+  #echo "with NORM"
+  for line in `find $DIRECTORY -type f | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g'`; do echo $(file -b $line);
+  done  | sort -f | sort -r | cut -c1-40 | sed "s/\(.\{40\}\)/\1.../" | uniq -c | sort -k1,1nr  |
+  while read line; do var=$(echo $line | grep -o -E "^[0-9]*"); if [ $helper -eq 1 ]; then average=$(echo "scale=2; $var/$n_of_hashtags" | bc); fi; helper=$((helper=0)); line=$(echo $line | sed "s/^[0-9]*\s/  /");
+  printf "%-46s: " " $line"; printf "%0.s#" $(seq 1 $(echo "scale=2; $var/$average" | bc)); echo; done | sed "s/^ */  /" | sed "s/^[0-9]*\s/ /" | head -n 10
 else
-  for line in `find $DIRECTORY -type f `; do echo $(file -b $line);
+  #echo "without NORM"
+  for line in `find $DIRECTORY -type f | sed 's|'$DIRECTORY'||g'| while read line ; do [ "$(echo "$line" | tr '/' '\n' | grep -E "$FILE_ERE")" ] || echo "$line"; done | sed 's|^|'$DIRECTORY'|g'`; do echo $(file -b $line);
   done  | sort -f | sort -r | cut -c1-40 | sed "s/\(.\{40\}\)/\1.../" | uniq -c | sort -k1,1nr  |
   while read line; do var=$(echo $line | grep -o -E "^[0-9]*"); line=$(echo $line | sed "s/^[0-9]*\s/  /");
   printf "%-46s: " " $line"; printf "%0.s#" $(seq 1 $var); echo; done | sed "s/^ */  /" | sed "s/^[0-9]*\s/ /" | head -n 10

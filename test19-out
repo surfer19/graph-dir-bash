@@ -6,11 +6,11 @@ File size histogram:
   <1 KiB  : ###
   <10 KiB : ##
   <100 KiB: ####
-  <1 MiB  :
-  <10 MiB :
-  <100 MiB:
-  <1 GiB  :
-  >=1 GiB :
+  <1 MiB  : 
+  <10 MiB : 
+  <100 MiB: 
+  <1 GiB  : 
+  >=1 GiB : 
 File type histogram:
   empty                                      : ###############
   PNG image data, 662 x 1197, 8-bit colorm...: ####
