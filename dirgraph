@@ -11,7 +11,7 @@ while getopts ":i: :n" opt; do
       exit 1
       ;;
 		n)
-			NORMALIZATION = $OPTARG
+			NORMALIZATION="pressed"
       echo "-n was triggered" >&2
       ;;
     :)
@@ -59,61 +59,78 @@ echo "File size histogram:"
 # print all file sizes
 #echo $(find $DIRECTORY -type f -exec ls -l {} \; | awk '{ print $5 }')
 
-printf	"  <100 B  : "
+variable6=""
+
+printf "  <100 B  :"
 variable=$(find $DIRECTORY -type f -size -100c)
+if test ! -z "$variable"; then printf " "; fi
 for i in $variable ; do printf "#"; done
 printf "\n"
 
-printf	"  <1 KiB  : "
+printf "  <1 KiB  :"
 variable2=$(find $DIRECTORY -type f -size +99c -size -1024c)
+if test ! -z "$variable2"; then printf " "; fi
 for j in $variable2; do printf "#"; done
 printf "\n"
 
-printf	"  <10 KiB : "
+printf "  <10 KiB :"
 variable3=$(find $DIRECTORY -type f -size +1023c -size -10240c)
+if test ! -z "$variable3"; then printf " "; fi
 for k in $variable3; do printf "#"; done
 printf "\n"
 
-printf	"  <100 KiB: "
+printf "  <100 KiB:"
 variable4=$(find $DIRECTORY -type f -size +10239c -size -102400c)
+if test ! -z "$variable4"; then printf " "; fi
 for l in $variable4; do printf "#"; done
 printf "\n"
 
-printf	"  <1 MiB  : "
+printf "  <1 MiB  :"
 variable5=$(find $DIRECTORY -type f -size +102399c -size -1048576c)
+#printf "$variable5"
+if test ! -z "$variable5"; then printf " "; fi
 for m in $variable5; do printf "#"; done
 printf "\n"
 
-printf	"  <10 MiB : "
+printf "  <10 MiB :"
 variable6=$(find $DIRECTORY -type f -size +1048575c -size -10485760c)
+if test ! -z "$variable6"; then printf " "; fi
 for n in $variable6; do printf "#"; done
 printf "\n"
 
-printf	"  <100 MiB: "
+printf "  <100 MiB:"
 variable7=$(find $DIRECTORY -type f -size +10485759c -size -104857600c)
+if test ! -z "$variable7"; then printf " "; fi
 for n in $variable7; do printf "#"; done
 printf "\n"
 
-printf	"  <1 GiB  : "
+printf "  <1 GiB  :"
 variable8=$(find $DIRECTORY -type f -size +104857599c -size -134217728c)
+if test ! -z "$variable8"; then printf " "; fi
 for n in $variable8; do printf "#"; done
 printf "\n"
 
-printf	"  >=1 GiB : "
+printf "  >=1 GiB :"
 variable9=$(find $DIRECTORY -type f -size +134217727c)
+if test ! -z "$variable9"; then printf " "; fi
 for n in $variable9; do printf "#"; done
 printf "\n"
 
 #FSHIST=`find $DIRECTORY -type f -exec file -b  {} \;
 #parsed=`file -b "$f"` ;
 #
-echo "File type histogram:"
+printf "File type histogram:\n"
 
-for line in `find $DIRECTORY -type f `; do echo $(file -b $line);
-done  | sort -f | sort -r | cut -c1-40 | sed "s/\(.\{40\}\)/\1.../" | uniq -c | sort -k1,1nr  |
-while read line; do var=$(echo $line | grep -o -E "^[0-9]*"); line=$(echo $line | sed "s/^[0-9]*\s/  /");
-printf "%-46s: " " $line"; printf "%0.s#" $(seq 1 $var); echo; done | sed "s/^ */  /" | sed "s/^[0-9]*\s/ /" | head -n 10
-                     # | cut -c1-40 | sed...
+if [ ! -z "$NORMALIZATION" ]
+then
+  echo "normalizacia"
+else
+  for line in `find $DIRECTORY -type f `; do echo $(file -b $line);
+  done  | sort -f | sort -r | cut -c1-40 | sed "s/\(.\{40\}\)/\1.../" | uniq -c | sort -k1,1nr  |
+  while read line; do var=$(echo $line | grep -o -E "^[0-9]*"); line=$(echo $line | sed "s/^[0-9]*\s/  /");
+  printf "%-46s: " " $line"; printf "%0.s#" $(seq 1 $var); echo; done | sed "s/^ */  /" | sed "s/^[0-9]*\s/ /" | head -n 10
+fi
+                       # | cut -c1-40 | sed...
 #| sed "s/.*: //"
 
 # -o print each match
